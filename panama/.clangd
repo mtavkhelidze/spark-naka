@@ -1,0 +1,9 @@
+Diagnostics:
+  UnusedIncludes: Strict
+CompileFlags:
+  Add: [ -DFP_PLUS_PLUS_INCLUDED_FROM_FP_FP=1 ]
+  Remove: [ -Wreserved-identifier ]
+  Compiler: /opt/homebrew/opt/llvm/bin/clang++
+Index:
+  Background: Build
+  StandardLibrary: Yes

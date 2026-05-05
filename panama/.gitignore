@@ -1,0 +1,26 @@
+# autoconf/automake generated
+configure
+aclocal.m4
+Makefile.in
+autom4te.cache/
+build-aux/
+
+# build artifacts
+Makefile
+*.o
+*.a
+*.so
+*.dylib
+_libs/
+.deps/
+.libs/
+config.status
+config.log
+libtool
+*.la
+*.lo
+
+# Aux scripts
+scripts/
+m4/*
+!m4/ax_cxx_compile_stdcxx.m4

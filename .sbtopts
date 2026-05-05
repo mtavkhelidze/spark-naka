@@ -1,0 +1,2 @@
+-java-home /opt/homebrew/Cellar/openjdk@21/21.0.11/libexec/openjdk.jdk/Contents/Home
+-Dsbt.log.noformat=true
