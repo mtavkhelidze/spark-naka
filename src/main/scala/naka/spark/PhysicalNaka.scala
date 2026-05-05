@@ -17,8 +17,7 @@ case class PhysicalNaka(exps: Seq[ExprNaka], child: SparkPlan)
     extends SparkPlan
     with Logging {
 
-  override lazy val output: Seq[Attribute] =
-    Amend.output(child, exps)
+  override lazy val output: Seq[Attribute] = child.output
 
   override lazy val supportsColumnar: Boolean = true
   override def children: Seq[SparkPlan] = child :: Nil
@@ -27,7 +26,7 @@ case class PhysicalNaka(exps: Seq[ExprNaka], child: SparkPlan)
     exps.find(_.exprId == a.exprId).getOrElse(a)
   }
 
-  private lazy val indexNaka =
+  private def indexNaka =
     outputExprs.collect { case e: ExprNaka =>
       child.output
         .indexWhere(_.exprId == e.references.head.exprId) -> e

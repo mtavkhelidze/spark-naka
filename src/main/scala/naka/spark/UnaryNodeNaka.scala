@@ -13,7 +13,7 @@ case class UnaryNodeNaka(
     with LogicalNaka
     with Logging {
 
-  override lazy val output: Seq[Attribute] = Amend.output(child, exps)
+  override lazy val output: Seq[Attribute] = child.output
 
   override protected def withNewChildInternal(nc: LogicalPlan): LogicalPlan =
     copy(child = nc)

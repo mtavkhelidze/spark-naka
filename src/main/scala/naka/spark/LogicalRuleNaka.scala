@@ -10,10 +10,12 @@ import org.apache.spark.sql.catalyst.expressions.NamedExpression
 case class LogicalRuleNaka(spark: SparkSession) extends Rule[LogicalPlan] {
   def apply(plan: LogicalPlan): LogicalPlan = plan transform ({
     case orig @ Project(pl, child) =>
-      val nakas = collectNakas(pl)
-      if (nakas.isEmpty) orig
-      else if (child.isInstanceOf[LogicalNaka]) orig
-      else Project(rewriteUp(pl, child), UnaryNodeNaka(nakas, child))
+      if (child.isInstanceOf[LogicalNaka]) orig
+      else {
+        val nakas = collectNakas(pl)
+        if (nakas.isEmpty) orig
+        else Project(pl, UnaryNodeNaka(nakas, child))
+      }
   })
 
   private def rewriteUp(

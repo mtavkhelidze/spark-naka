@@ -51,9 +51,9 @@ object Main {
       .getOrCreate()
 
     val df = spark.read
-      .option("header", "true")
-      .csv("data/E0/PE-20.csv")
-//      .parquet("./data/matches.parquet")
+//      .option("header", "true")
+//      .csv("data/E0/PE-20.csv")
+      .parquet("./data/matches.parquet")
 //      .createTempView("matches")
       .select(epoch("Date").as("Unix"), col("Date"))
 
