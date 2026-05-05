@@ -6,12 +6,11 @@ import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions._
 
 trait EpochSyntax extends Logging {
-  def epoch(colName: String): Column = call_function("epoch", col(colName))
+  def epoch(name: String): Column =
+    call_function("epoch", col(name))
 
-  def epoch(c: Column): Column = {
-    logDebug(s"epoch_column(${c})")
+  def epoch(c: Column): Column =
     call_function("epoch", c)
-  }
 }
 
 object EpochSyntax extends EpochSyntax {

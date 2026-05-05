@@ -24,7 +24,7 @@ case class PhysicalNaka(exps: Seq[ExprNaka], child: SparkPlan)
   override def children: Seq[SparkPlan] = child :: Nil
 
   private lazy val outputExprs: Seq[Expression] = output.map { a =>
-    exps.find(_.references.head.exprId == a.exprId).getOrElse(a)
+    exps.find(_.exprId == a.exprId).getOrElse(a)
   }
 
   private lazy val indexNaka =
