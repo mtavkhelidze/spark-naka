@@ -7,7 +7,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{
   Attribute,
-  AttributeReference,
   Expression,
   UnsafeProjection,
 }
@@ -18,13 +17,8 @@ case class PhysicalNaka(exps: Seq[ExprNaka], child: SparkPlan)
     extends SparkPlan
     with Logging {
 
-  override lazy val output: Seq[Attribute] = {
-    val res = child.output ++ exps.map(e =>
-      AttributeReference(e.prettyName, e.dataType)(e.exprId),
-    )
-    logDebug(s"output: ${res}")
-    res
-  }
+  override lazy val output: Seq[Attribute] =
+    Amend.output(child, exps)
 
   override lazy val supportsColumnar: Boolean = true
   override def children: Seq[SparkPlan] = child :: Nil

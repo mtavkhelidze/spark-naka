@@ -12,7 +12,7 @@ case class LogicalRuleNaka(spark: SparkSession) extends Rule[LogicalPlan] {
     case orig @ Project(pl, child) =>
       val nakas = collectNakas(pl)
       if (nakas.isEmpty) orig
-      else if (child.isInstanceOf[LogicalPlanNaka]) orig
+      else if (child.isInstanceOf[LogicalNaka]) orig
       else Project(rewriteUp(pl, child), UnaryNodeNaka(nakas, child))
   })
 
