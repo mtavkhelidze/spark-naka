@@ -37,11 +37,13 @@ case class PhysicalNaka(exps: Seq[ExprNaka], child: SparkPlan)
     logDebug("doExecuteColumnar")
     child.executeColumnar().mapPartitions { batches =>
       batches.map(batch => {
-        val passThroughCols = (0 until batch.numCols).map(batch.column)
-        val nakaCols = indexNaka.map { case (idx, exp) =>
-          exp.invoke(batch.column(idx), batch.numRows)
-        }
-        new ColumnarBatch((passThroughCols ++ nakaCols).toArray, batch.numRows)
+        val cols = (0 until batch.numCols).map(i => {
+          indexNaka
+            .get(i)
+            .map(exp => exp.invoke(batch.column(i), batch.numRows))
+            .getOrElse(batch.column(i))
+        })
+        new ColumnarBatch(cols.toArray, batch.numRows)
       })
     }
   }

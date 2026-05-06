@@ -1,6 +1,4 @@
 import naka._
-import naka.syntax._
-import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.SparkSession
 
@@ -50,20 +48,20 @@ object Main {
       .appName("SparkNaka")
       .getOrCreate()
 
-    val df = spark.read
+    val df1 = spark.read
 //      .option("header", "true")
-//      .csv("data/E0/PE-20.csv")
+//      .csv("data/E0", "data/E1")
       .parquet("./data/matches.parquet")
-//      .createTempView("matches")
-      .select(epoch("Date").as("Unix"), col("Date"))
+      .createTempView("matches")
 
-    try {
-      df.show(5)
-    } catch {
-      case e: Exception => e.printStackTrace()
-    }
-//    println(df.queryExecution.executedPlan)
-    println(df.queryExecution)
+    val df2 = spark
+      .sql(
+        "select distinct epoch(Date) from matches limit 10",
+      )
+
+    df2.show()
+    println(df2.queryExecution)
+//    println(df.queryExecution)
 
   }
 }
