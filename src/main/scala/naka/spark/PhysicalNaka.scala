@@ -7,6 +7,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{
   Attribute,
+  AttributeReference,
   Expression,
   UnsafeProjection,
 }
@@ -17,38 +18,37 @@ case class PhysicalNaka(exps: Seq[ExprNaka], child: SparkPlan)
     extends SparkPlan
     with Logging {
 
-  override lazy val output: Seq[Attribute] = child.output
-
-  override lazy val supportsColumnar: Boolean = true
+  override def supportsColumnar: Boolean = true
   override def children: Seq[SparkPlan] = child :: Nil
 
-  private lazy val outputExprs: Seq[Expression] = output.map { a =>
-    exps.find(_.exprId == a.exprId).getOrElse(a)
+  override lazy val output: Seq[Attribute] =
+    child.output ++ exps.map(e =>
+      AttributeReference(e.prettyName, e.dataType, e.nullable)(e.exprId),
+    )
+
+  private lazy val indexNaka: Seq[(Int, ExprNaka)] = exps.map { e =>
+    child.output.indexWhere(_.exprId == e.references.head.exprId) -> e
   }
 
-  private def indexNaka =
-    outputExprs.collect { case e: ExprNaka =>
-      child.output
-        .indexWhere(_.exprId == e.references.head.exprId) -> e
-
-    }.toMap
-
   override protected def doExecuteColumnar(): RDD[ColumnarBatch] = {
-    logDebug("doExecuteColumnar")
+    logDebug(s"doExecuteColumnar")
     child.executeColumnar().mapPartitions { batches =>
       batches.map(batch => {
-        val cols = (0 until batch.numCols).map(i => {
-          indexNaka
-            .get(i)
-            .map(exp => exp.invoke(batch.column(i), batch.numRows))
-            .getOrElse(batch.column(i))
-        })
-        new ColumnarBatch(cols.toArray, batch.numRows)
+        val childCols = (0 until batch.numCols).map(batch.column)
+        val nakaCols = indexNaka.map { case (srcIdx, exp) =>
+          exp.invoke(batch.column(srcIdx), batch.numRows)
+        }
+        new ColumnarBatch((childCols ++ nakaCols).toArray, batch.numRows)
       })
     }
   }
 
+  // non-columnar
+  private lazy val outputExprs: Seq[Expression] =
+    child.output ++ exps
+
   override protected def doExecute(): RDD[InternalRow] = {
+    logDebug(s"doExecute")
     child
       .execute()
       .mapPartitions(_.map(UnsafeProjection.create(outputExprs, child.output)))

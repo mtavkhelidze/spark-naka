@@ -9,24 +9,23 @@ import org.apache.spark.sql.catalyst.expressions.NamedExpression
 
 case class LogicalRuleNaka(spark: SparkSession) extends Rule[LogicalPlan] {
   def apply(plan: LogicalPlan): LogicalPlan = plan transform ({
-    case orig @ Project(pl, child) =>
+    case orig @ Project(projectList, child) =>
       if (child.isInstanceOf[LogicalNaka]) orig
       else {
-        val nakas = collectNakas(pl)
+        val nakas = collectNakas(projectList)
         if (nakas.isEmpty) orig
-        else Project(pl, UnaryNodeNaka(nakas, child))
+        else {
+          val node = UnaryNodeNaka(nakas, child)
+          val rewritten =
+            projectList.map(_.transform { case e: ExprNaka =>
+              node.output
+                .find(_.exprId == e.exprId)
+                .getOrElse(e)
+            }.asInstanceOf[NamedExpression])
+          Project(rewritten, node)
+        }
       }
   })
-
-  private def rewriteUp(
-      ne: Seq[NamedExpression],
-      childPlan: LogicalPlan,
-  ): Seq[NamedExpression] = ne
-    .map(_.transformUp { case naka: ExprNaka =>
-      childPlan.output
-        .find(_.exprId == naka.exprId)
-        .getOrElse(naka)
-    }.asInstanceOf[NamedExpression])
 
   private def collectNakas(exps: Seq[NamedExpression]): Seq[ExprNaka] = {
     exps.flatMap(_.collect { case en: ExprNaka => en })

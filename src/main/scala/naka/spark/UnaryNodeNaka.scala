@@ -3,8 +3,8 @@ package spark
 
 import naka.ops.ExprNaka
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.catalyst.expressions.Attribute
-import org.apache.spark.sql.catalyst.plans.logical.{ LogicalPlan, UnaryNode }
+import org.apache.spark.sql.catalyst.expressions.{Attribute, AttributeReference}
+import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, UnaryNode}
 
 case class UnaryNodeNaka(
     exps: Seq[ExprNaka],
@@ -13,7 +13,9 @@ case class UnaryNodeNaka(
     with LogicalNaka
     with Logging {
 
-  override lazy val output: Seq[Attribute] = child.output
+  override def output: Seq[Attribute] = child.output ++ exps.map(e =>
+    AttributeReference(e.prettyName, e.dataType, e.nullable)(e.exprId),
+  )
 
   override protected def withNewChildInternal(nc: LogicalPlan): LogicalPlan =
     copy(child = nc)

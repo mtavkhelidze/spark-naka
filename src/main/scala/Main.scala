@@ -53,15 +53,24 @@ object Main {
 //      .csv("data/E0", "data/E1")
       .parquet("./data/matches.parquet")
       .createTempView("matches")
-
     val df2 = spark
       .sql(
-        "select distinct epoch(Date) from matches limit 10",
+        "select Date, HomeTeam, epoch(Date) as Unix, epoch(Date) as TimeStamp from matches sort by unix",
       )
-
     df2.show()
     println(df2.queryExecution)
-//    println(df.queryExecution)
-
+//
+//    (1 to 5).foreach { i =>
+//      val start = System.currentTimeMillis()
+//      df2.collect()
+//      println(s"Run $i: ${System.currentTimeMillis() - start} ms")
+//    }
+//    val executedPlan = df2.queryExecution.executedPlan
+//    executedPlan.foreach { plan =>
+//      println(s"Operator: ${plan.nodeName}")
+//      plan.metrics.foreach { case (name, metric) =>
+//        println(s"  $name: ${metric.value}")
+//      }
+//    }
   }
 }
